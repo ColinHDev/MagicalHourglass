@@ -17,7 +17,7 @@ const crypto = require('crypto');
 
 var fish = ['🐠', '🐟', '🐡', '🐬', '🐳', '🐋'];
 
-const githubregex = /http(?:s|):\/\/github\.com\/(.*?\/.*?\/)blob\/(.*?\/.*?)#L([0-9]+)-?L?([0-9]+)?/;
+const githubregex = /http(?:s|):\/\/github\.com\/(.*?\/.*?\/)blob\/(.*?)\/(.*?)#L([0-9]+)-?L?([0-9]+)?/;
 const fileendregex = /.*\.([a-zA-Z0-9]*)/;
 
 var firstrun = 1;
