@@ -792,45 +792,62 @@ function currencyConvert(amount, from, to) {
 }
 
 function gitLinePreview(match, message) {
-  // Match -> 1: repo; 2: file; 3: line-from; 4: line-to
-  request.get('https://raw.githubusercontent.com/' + match[1] + match[2], function(error, response, body) {
-    if (!error && response.statusCode == 200) {
-      var lines = body.split('\n');
-      if (typeof lines[match[3] - 1] === 'undefined') return;
-      match[3] = Number(match[3]);
-      if (typeof match[4] === "undefined") {
-        match[4] = match[3];
-        var from = match[3] - 5;
-        var to = match[3] + 5;
-      } else {
-        match[4] = Number(match[4]);
-        if (typeof lines[match[4] - 1] === 'undefined' || match[3] >= match[4]) return;
-        var from = match[3];
-        var to = match[4];
-        var diff = match[4] - match[3];
-        if (diff < 11) {
-          var space = Math.round((11 - diff) / 2);
-          from = match[3] - space;
-          to = match[4] + space;
+  /**
+   * match:
+   *        1: owner + repo
+   *        2: branch
+   *        3: path + file
+   *        4: line-from
+   *        5: line-to
+   */
+  request(
+      {
+        url: 'https://api.github.com/repos/' + match[1] + 'contents/' + match[3] + '?ref=' + match[2],
+        headers: {
+          'User-Agent': config.github_username,
+          'Accept': 'application/vnd.github.v3.raw',
+          'Authorization': 'token ' + config.github_token
         }
-        if (diff > 40) {
-          from = match[3];
-          to = match[3] + 40;
+      },
+      function(error, response, body) {
+        if (!error && response.statusCode == 200) {
+          var lines = body.split('\n');
+          if (typeof lines[match[4] - 1] === 'undefined') return;
+          match[4] = Number(match[4]);
+          if (typeof match[5] === "undefined") {
+            match[5] = match[4];
+            var from = match[4] - 5;
+            var to = match[4] + 5;
+          } else {
+            match[5] = Number(match[5]);
+            if (typeof lines[match[5] - 1] === 'undefined' || match[4] >= match[5]) return;
+            var from = match[4];
+            var to = match[5];
+            var diff = match[5] - match[4];
+            if (diff < 11) {
+              var space = Math.round((11 - diff) / 2);
+              from = match[4] - space;
+              to = match[5] + space;
+            }
+            if (diff > 40) {
+              from = match[4];
+              to = match[4] + 40;
+            }
+          }
+          var lang = fileendregex.exec(match[3]) ? fileendregex.exec(match[3])[1] : '';
+          if (lang === "kt") lang = "kotlin"; // Workaround for Kotlin syntax highlighting
+          if (lang === "svg") lang = "xml"; // Workaround for svg syntax highlighting
+          var cleanFileName = match[3].replace(/\?.+/, ""); // Remove HTTP GET Query Parameters
+          var codemsg = `Showing lines ${from} - ${to} of \`${cleanFileName}\`\n` + '```' + lang + '\n';
+          for (i = from; i <= to; i++) {
+            if (typeof lines[i - 1] !== 'undefined') {
+              codemsg += `${((i >= match[4] && i <= match[5]) ? ">" : " ")}${(extras.nlength(i) < extras.nlength(to) ? " " : "")}${i} ${lines[i - 1]}\n`;
+            }
+          }
+          message.reply(codemsg + '```');
         }
       }
-      var lang = fileendregex.exec(match[2]) ? fileendregex.exec(match[2])[1] : '';
-      if (lang === "kt") lang = "kotlin"; // Workaround for Kotlin syntax highlighting
-      if (lang === "svg") lang = "xml"; // Workaround for svg syntax highlighting
-      var cleanFileName = match[2].replace(/\?.+/, ""); // Remove HTTP GET Query Parameters
-      var codemsg = `Showing lines ${from} - ${to} of \`${cleanFileName}\`\n` + '```' + lang + '\n';
-      for (i = from; i <= to; i++) {
-        if (typeof lines[i - 1] !== 'undefined') {
-          codemsg += `${((i >= match[3] && i <= match[4]) ? ">" : " ")}${(extras.nlength(i) < extras.nlength(to) ? " " : "")}${i} ${lines[i - 1]}\n`;
-        }
-      }
-      message.reply(codemsg + '```');
-    }
-  });
+  )
 }
 
 function whois(member, mtn = true) {
