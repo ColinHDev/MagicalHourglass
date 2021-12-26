@@ -8,6 +8,8 @@
   "googlekey": "Your Google CSE Api key",
   "google_cse_id": "Your Google CSE search engine ID",
   "apiai_token": "The API key of your API.AI chatbot",
+  "github_username": "The name of your user's account",
+  "github_token": "The Personal Access Token of that account",
   
   "mainguild": "The guild's id this bot has been installed for",
   "juiceid": "ID of the Raspberry juice emoji",
